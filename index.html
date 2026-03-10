@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收藏爱好者社区</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <h1>收藏爱好者社区</h1>
+                <p>分享你的藏品，与同好交流</p>
+            </div>
+            <div class="header-right">
+                <div id="user-controls">
+                    <button id="login-btn" class="auth-btn">登录</button>
+                    <button id="register-btn" class="auth-btn">注册</button>
+                </div>
+                <div id="user-info" style="display: none;">
+                    <span id="current-user"></span>
+                    <button id="follow-btn" class="auth-btn">关注</button>
+                    <button id="message-btn" class="auth-btn">私信</button>
+                    <button id="logout-btn" class="auth-btn">退出</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 登录模态框 -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>用户登录</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">用户名：</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密码：</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>用户注册</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerUsername">用户名：</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密码：</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">确认密码：</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 关注模态框 -->
+    <div id="follow-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>关注用户</h2>
+            <div id="follow-list" class="user-list">
+                <!-- 用户列表将通过JavaScript动态添加 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 私信模态框 -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content message-modal-content">
+            <span class="close">&times;</span>
+            <h2>私信</h2>
+            <div class="message-container">
+                <div class="message-users">
+                    <h3>用户列表</h3>
+                    <div id="message-users-list" class="user-list">
+                        <!-- 用户列表将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+                <div class="message-chat">
+                    <div id="message-chat-area" class="message-chat-area">
+                        <!-- 聊天内容将通过JavaScript动态添加 -->
+                    </div>
+                    <div class="message-input">
+                        <input type="text" id="message-input" placeholder="输入消息...">
+                        <button id="send-message-btn">发送</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        <!-- 藏品上传区域 -->
+        <section class="upload-section">
+            <h2>分享你的藏品</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="itemName">藏品名称：</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemDescription">藏品介绍：</label>
+                    <textarea id="itemDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="itemType">类型：</label>
+                    <select id="itemType" required>
+                        <option value="image">图片</option>
+                        <option value="video">视频</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itemMedia">上传文件：</label>
+                    <input type="file" id="itemMedia" accept="image/*,video/*" required>
+                </div>
+                <button type="submit">发布藏品</button>
+            </form>
+        </section>
+
+        <!-- 藏品展示区域 -->
+        <section class="items-section">
+            <h2>藏品展示</h2>
+            <div id="itemsContainer" class="items-container">
+                <!-- 藏品将通过JavaScript动态添加 -->
+            </div>
+        </section>
+
+        <!-- 留言区 -->
+        <section class="comments-section">
+            <h2>交流留言</h2>
+            <form id="commentForm">
+                <div class="form-group">
+                    <label for="commentContent">留言内容：</label>
+                    <textarea id="commentContent" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>表情包：</label>
+                    <div class="emoji-picker">
+                        <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
+                        <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+                        <button type="button" class="emoji-btn" data-emoji="😍">😍</button>
+                        <button type="button" class="emoji-btn" data-emoji="🤔">🤔</button>
+                        <button type="button" class="emoji-btn" data-emoji="😎">😎</button>
+                        <button type="button" class="emoji-btn" data-emoji="👍">👍</button>
+                        <button type="button" class="emoji-btn" data-emoji="👎">👎</button>
+                        <button type="button" class="emoji-btn" data-emoji="❤️">❤️</button>
+                        <button type="button" class="emoji-btn" data-emoji="🎉">🎉</button>
+                        <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+                    </div>
+                </div>
+                <button type="submit">发表留言</button>
+            </form>
+            <div id="commentsContainer" class="comments-container">
+                <!-- 留言将通过JavaScript动态添加 -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 收藏爱好者社区</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
